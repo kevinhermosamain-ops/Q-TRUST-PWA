@@ -1,0 +1,3 @@
+[submodule "Q-TRUST-PWA"]
+    path = Q-TRUST-PWA
+    url = https://github.com/kevinhermosamain-ops/Q-TRUST-PWA-submodule

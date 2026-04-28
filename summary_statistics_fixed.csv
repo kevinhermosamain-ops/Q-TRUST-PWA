@@ -1,0 +1,4 @@
+system,detection_rate,false_positive_rate,f1_score,t0_detection_rate,t0_false_positive_rate,t0_f1_score,final_corruption,nash_honest_frac,mean_time_to_detect,mean_I_total,omega_hz,note
+Q-TRUST,1.0,0.0,1.0,0.971,0.004,0.959,0.2001,0.8,0.0,261512.677,0.1,DR=1.0/FPR=0.0 is mathematically guaranteed end-state after replicator convergence. t0_* columns report initial detection performance before dynamics converge.
+Blockchain-only,0.6542,0.0,0.7856,0.621,0.038,0.653,0.217,0.788,5.66,102383.6683,0.033,"Opacity threshold detection only. No Lindblad decay, no AI ensemble."
+Classical audit,0.4218,0.0527,0.536,0.398,0.051,0.489,0.4585,0.533,22.9,66821.8204,0.001,"Parameters from COA Philippines 2021: AUDIT_RATE=0.55, FPR=0.092, LAG=12 months."

@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Q-TRUST · Quantum Governance System</title>
+  
+  <link rel="manifest" href="manifest.json"/>
+  
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+  
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('.sw.js')
+        .then(() => console.log('Service Worker Registered'))
+        .catch((err) => {
+           console.error('PWA Service Worker Error:', err);
+        });
+    }
+  </script>
+  <style>
+/* ══════════════════════════════════════════════════
+   ENVIRONMENT TOGGLE — Directive 3
+   Change APP_ENV below and the banner + routing update.
+   'simulation' = reads from local CSV-derived constants (no server needed)
+   'pilot'      = live FastAPI endpoints at /api/v1/*
+══════════════════════════════════════════════════ */
+
+:root {
+  --night: #050A13;
+  --deep:  #0A1628;
+  --mid:   #0F2248;
+  --panel: rgba(255,255,255,0.03);
+  --border: rgba(255,255,255,0.08);
+  --border2: rgba(255,255,255,0.14);
+  --blue:  #2563EB;
+  --cyan:  #22D3EE;
+  --teal:  #0D9488;
+  --green: #4ADE80;
+  --amber: #FBBF24;
+  --red:   #F87171;
+  --text:  #E2E8F0;
+  --muted: #64748B;
+  --mono:  'DM Mono', monospace;
+  --head:  'Syne', sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { height: 100%; scroll-behavior: smooth; }
+
+body {
+  font-family: var(--head); background: var(--night);
+  color: var(--text); min-height: 100vh;
+  overflow-x: hidden; -webkit-font-smoothing: antialiased;
+}
+
+/* ── Background mesh ── */
+body::before {
+  content: '';
+  position: fixed; inset: 0; z-index: 0;
+  background:
+    radial-gradient(ellipse 80% 60% at 20% 0%, rgba(37,99,235,0.18) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 50% at 80% 100%, rgba(13,148,136,0.14) 0%, transparent 60%),
+    radial-gradient(ellipse 40% 40% at 50% 50%, rgba(34,211,238,0.05) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+/* ── Grid overlay ── */
+body::after {
+  content: '';
+  position: fixed; inset: 0; z-index: 0;
+  background-image:
+    linear-gradient(rgba(37,99,235,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(37,99,235,0.04) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+}
+
+/* ── ENV BADGE (top bar) ── */
+.env-bar {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  background: rgba(5,10,19,0.85); backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 28px; height: 44px;
+  font-family: var(--mono); font-size: 11px; color: var(--muted);
+}
+.env-dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; margin-right: 7px; }
+.env-dot.sim { background: var(--cyan); box-shadow: 0 0 8px var(--cyan); animation: pulse 2s infinite; }
+.env-dot.pilot { background: var(--green); box-shadow: 0 0 8px var(--green); animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+.env-pill {
+  padding: 3px 10px; border-radius: 99px; font-size: 10px; font-weight: 500;
+  letter-spacing: 0.06em;
+}
+.env-pill.sim  { background: rgba(34,211,238,0.1); color: var(--cyan); border: 1px solid rgba(34,211,238,0.25); }
+.env-pill.pilot{ background: rgba(74,222,128,0.1); color: var(--green); border: 1px solid rgba(74,222,128,0.25); }
+.env-bar-links { display: flex; gap: 20px; }
+.env-bar-links a { color: var(--muted); text-decoration: none; font-size: 11px; transition: color 0.15s; }
+.env-bar-links a:hover { color: var(--text); }
+
+/* ── HERO ── */
+.hero {
+  position: relative; z-index: 1;
+  min-height: 100vh;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 80px 24px 60px;
+  text-align: center;
+}
+
+.logo-mark {
+  width: 72px; height: 72px; border-radius: 20px;
+  background: linear-gradient(135deg, #1D4ED8, #0D9488);
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 28px;
+  box-shadow: 0 0 40px rgba(37,99,235,0.35), inset 0 1px 0 rgba(255,255,255,0.1);
+  animation: float 4s ease-in-out infinite;
+}
+@keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
+.logo-mark-text { font-family: var(--mono); font-size: 20px; font-weight: 700; color: #fff; letter-spacing: -0.02em; }
+
+.kicker {
+  font-family: var(--mono); font-size: 11px; font-weight: 500;
+  color: var(--cyan); letter-spacing: 0.18em; text-transform: uppercase;
+  margin-bottom: 16px;
+  display: inline-flex; align-items: center; gap: 8px;
+}
+.kicker::before, .kicker::after {
+  content: '—'; opacity: 0.4;
+}
+
+h1 {
+  font-size: clamp(36px, 7vw, 76px);
+  font-weight: 800; line-height: 1.05; letter-spacing: -0.03em;
+  margin-bottom: 20px;
+  background: linear-gradient(135deg, #FFFFFF 0%, #94A3B8 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+h1 em {
+  font-style: normal;
+  background: linear-gradient(135deg, #22D3EE, #2563EB);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.sub {
+  font-size: clamp(14px, 2.2vw, 18px);
+  color: var(--muted); max-width: 620px; margin: 0 auto 44px;
+  line-height: 1.7; font-weight: 400;
+}
+
+/* ── PORTAL CARDS ── */
+.portal-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px; max-width: 720px; width: 100%; margin: 0 auto 48px;
+}
+
+.portal-card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 20px; padding: 28px;
+  cursor: pointer;
+  text-align: left; text-decoration: none;
+  display: block;
+  transition: border-color 0.2s, background 0.2s, transform 0.2s, box-shadow 0.2s;
+  position: relative; overflow: hidden;
+}
+.portal-card::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+  opacity: 0; transition: opacity 0.2s;
+}
+.portal-card:hover {
+  border-color: var(--border2);
+  background: rgba(255,255,255,0.05);
+  transform: translateY(-3px);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.06);
+}
+.portal-card:hover::before { opacity: 1; }
+
+.portal-card.citizen:hover { border-color: rgba(13,148,136,0.4); box-shadow: 0 12px 40px rgba(13,148,136,0.15), 0 0 0 1px rgba(13,148,136,0.2); }
+.portal-card.official:hover { border-color: rgba(37,99,235,0.4); box-shadow: 0 12px 40px rgba(37,99,235,0.15), 0 0 0 1px rgba(37,99,235,0.2); }
+
+.card-icon {
+  width: 48px; height: 48px; border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px; margin-bottom: 18px;
+}
+.citizen .card-icon  { background: rgba(13,148,136,0.15); border: 1px solid rgba(13,148,136,0.3); }
+.official .card-icon { background: rgba(37,99,235,0.15);  border: 1px solid rgba(37,99,235,0.3); }
+
+.card-title {
+  font-size: 18px; font-weight: 700; margin-bottom: 8px;
+  letter-spacing: -0.02em;
+}
+.card-desc {
+  font-size: 13px; color: var(--muted); line-height: 1.6;
+  font-weight: 400; margin-bottom: 20px;
+}
+.card-pills { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 20px; }
+.pill {
+  padding: 3px 9px; border-radius: 99px;
+  font-family: var(--mono); font-size: 10px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.08);
+  color: var(--muted);
+}
+.card-cta {
+  display: flex; align-items: center; justify-content: space-between;
+  font-size: 14px; font-weight: 600;
+}
+.citizen .card-cta  { color: var(--teal); }
+.official .card-cta { color: #60A5FA; }
+
+.card-arrow { font-size: 18px; transition: transform 0.2s; }
+.portal-card:hover .card-arrow { transform: translateX(4px); }
+
+/* ── OPTIONAL: Auditor link ── */
+.auditor-link {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-family: var(--mono); font-size: 11px; color: var(--muted);
+  text-decoration: none; transition: color 0.15s; cursor: pointer;
+  border: 1px solid var(--border); border-radius: 8px;
+  padding: 8px 16px; margin-bottom: 52px;
+}
+.auditor-link:hover { color: var(--text); border-color: var(--border2); }
+
+/* ── THEOREM STRIP ── */
+.theorem-strip {
+  width: 100%; max-width: 900px; margin: 0 auto;
+  display: flex; gap: 0; position: relative; z-index: 1;
+  overflow-x: auto; padding: 0 24px 60px;
+}
+.theorem-strip::-webkit-scrollbar { display: none; }
+.th-item {
+  flex: 1; min-width: 140px;
+  border: 1px solid var(--border); border-right: none;
+  padding: 16px 14px; text-align: center;
+  background: var(--panel);
+}
+.th-item:first-child { border-radius: 12px 0 0 12px; }
+.th-item:last-child  { border-radius: 0 12px 12px 0; border-right: 1px solid var(--border); }
+.th-num { font-family: var(--mono); font-size: 10px; color: var(--muted); margin-bottom: 6px; }
+.th-name { font-size: 11px; font-weight: 600; margin-bottom: 4px; color: var(--text); }
+.th-eq { font-family: var(--mono); font-size: 9px; color: var(--cyan); line-height: 1.5; }
+
+/* ── STATS ROW ── */
+.stats-row {
+  display: flex; gap: 32px; justify-content: center;
+  flex-wrap: wrap; margin-bottom: 44px;
+  font-family: var(--mono); font-size: 11px; color: var(--muted);
+  position: relative; z-index: 1;
+}
+.stat-item { text-align: center; }
+.stat-num { font-size: 22px; font-weight: 700; color: var(--text); font-family: var(--head); display: block; }
+.stat-num.green { color: var(--green); }
+.stat-num.cyan  { color: var(--cyan); }
+.stat-num.amber { color: var(--amber); }
+
+/* ── DISCLOSURE FOOTER ── */
+.disclosure {
+  position: relative; z-index: 1;
+  text-align: center; padding: 24px;
+  font-family: var(--mono); font-size: 10px;
+  color: var(--muted); line-height: 1.8;
+  border-top: 1px solid var(--border);
+  max-width: 800px; margin: 0 auto;
+}
+.disclosure a { color: var(--cyan); text-decoration: none; }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 640px) {
+  .portal-grid { grid-template-columns: 1fr; max-width: 420px; }
+  .theorem-strip { gap: 0; }
+  .env-bar-links { display: none; }
+}
+</style>
+</head>
+<body>
+
+<!-- ══ ENV TOP BAR ══ -->
+<div class="env-bar">
+  <div style="display:flex;align-items:center;gap:12px;">
+    <span class="env-dot sim" id="env-dot"></span>
+    <span id="env-badge-text" style="color:#94A3B8;"></span>
+    <span class="env-pill sim" id="env-pill">SIMULATION</span>
+  </div>
+  <div class="env-bar-links">
+    <a href="#" onclick="toggleEnv()">⇄ Toggle ENV</a>
+    <a href="engine_room.html">Layer 3: Engine</a>
+    <a href="https://github.com/qtrust-project" target="_blank">GitHub ↗</a>
+  </div>
+</div>
+
+<!-- ══ HERO ══ -->
+<section class="hero">
+  <div class="logo-mark">
+    <span class="logo-mark-text">Q</span>
+  </div>
+
+  <div class="kicker">ISEF 2027 · Systems Software</div>
+
+  <h1>Q-TRUST<br><em>Quantum Governance</em><br>System</h1>
+
+  <p class="sub">
+    A quantum game-theoretic framework that makes political corruption
+    mathematically unstable — implemented on Hyperledger Fabric
+    with quantum-inspired algorithms running on classical hardware.
+  </p>
+
+  <!-- KPI strip from summary_statistics_fixed.csv -->
+  <div class="stats-row">
+    <div class="stat-item">
+      <span class="stat-num green">97.1%</span>
+      Detection Rate (t₀)
+    </div>
+    <div class="stat-item">
+      <span class="stat-num green">0.4%</span>
+      False Positive Rate
+    </div>
+    <div class="stat-item">
+      <span class="stat-num cyan">10 s</span>
+      τ<sub>corrupt</sub> (ω=0.1 Hz)
+    </div>
+    <div class="stat-item">
+      <span class="stat-num amber">261k</span>
+      Fisher Info I_total
+    </div>
+    <div class="stat-item">
+      <span class="stat-num">5 Theorems</span>
+      Proven
+    </div>
+  </div>
+
+  <!-- ══ PORTAL CARDS ══ -->
+  <div class="portal-grid">
+    <!-- CITIZEN PORTAL → Layer 1 -->
+    <a class="portal-card citizen" href="citizen_dashboard.html">
+      <div class="card-icon">🏛️</div>
+      <div class="card-title">Citizen Portal</div>
+      <div class="card-desc">
+        Monitor your barangay's budget in real-time. Track allocation-benefit
+        correlations, view anomaly flags, and verify C(A,B) ≥ 0.707.
+      </div>
+      <div class="card-pills">
+        <span class="pill">Public Access</span>
+        <span class="pill">Theorem 2 C(A,B)</span>
+        <span class="pill">Real-time Feed</span>
+      </div>
+      <div class="card-cta">
+        <span>Enter as Citizen</span>
+        <span class="card-arrow">→</span>
+      </div>
+    </a>
+
+    <!-- OFFICIAL LOGIN → Layer 2 -->
+    <a class="portal-card official" href="ui_layer2_governance_portal_fixed.html">
+      <div class="card-icon">🔐</div>
+      <div class="card-title">Official Login</div>
+      <div class="card-desc">
+        Submit and sign budget transactions, view your quantum state ρ(t),
+        respond to audit flags, and access the document vault.
+      </div>
+      <div class="card-pills">
+        <span class="pill">BARANGAY_CAPTAIN</span>
+        <span class="pill">Theorem 1 ρ(t)</span>
+        <span class="pill">Blockchain-Sealed</span>
+      </div>
+      <div class="card-cta">
+        <span>Official Sign-In</span>
+        <span class="card-arrow">→</span>
+      </div>
+    </a>
+  </div>
+
+  <!-- Auditor shortcut -->
+  <a class="auditor-link" href="engine_room.html">
+    ⚙️ &nbsp; Auditor / Processing Engine &nbsp;→
+  </a>
+
+  <!-- ══ THEOREM STRIP ══ -->
+  <div class="theorem-strip">
+    <div class="th-item">
+      <div class="th-num">THEOREM 1</div>
+      <div class="th-name">Corruption Instability</div>
+      <div class="th-eq">ρ_CC(t) = ρ_CC(0)·e^{-ωt}<br>τ = 1/ω = 10 s</div>
+    </div>
+    <div class="th-item">
+      <div class="th-num">THEOREM 2</div>
+      <div class="th-name">Entanglement Detection</div>
+      <div class="th-eq">C(A,B) ≥ 1/√2 ≈ 0.707<br>S = 2√2 ≈ 2.828</div>
+    </div>
+    <div class="th-item">
+      <div class="th-num">THEOREM 3</div>
+      <div class="th-name">Uncertainty Principle</div>
+      <div class="th-eq">ΔH · ΔD ≥ T_trust/2<br>Opacity backfires</div>
+    </div>
+    <div class="th-item">
+      <div class="th-num">THEOREM 4</div>
+      <div class="th-name">Nash Equilibrium Shift</div>
+      <div class="th-eq">û(Q̂,Q̂) = R > P<br>ω > ω_crit → honest</div>
+    </div>
+    <div class="th-item">
+      <div class="th-num">THEOREM 5</div>
+      <div class="th-name">Optimal Detection (CRLB)</div>
+      <div class="th-eq">I_total = I_Q+I_C+I_AI<br>Var(θ̂) ≥ 1/I_total</div>
+    </div>
+  </div>
+
+</section>
+
+<!-- ══ DISCLOSURE ══ -->
+<footer class="disclosure">
+  <strong>⚛️ Quantum-Inspired Disclosure:</strong>
+  Q-TRUST does NOT use physical quantum hardware for governance logic.
+  All density-matrix evolution (<code>GovernanceDensityMatrix</code>), Lindblad equations, and entanglement
+  correlations run as classical floating-point computation in Python (<code>quantum_core.py</code>,
+  <code>entanglement.py</code>, <code>fisher_info.py</code>).
+  "Quantum-inspired" refers to the mathematical formalism, not the physical substrate.
+  The only actual quantum hardware component is a <strong>Bell state validation experiment on IBM Quantum</strong>
+  (free cloud tier, Qiskit) confirming Theorem 2's circuit foundations are physically realizable.
+  <br><br>
+  Data shown above sourced from <code>summary_statistics_fixed.csv</code> (t₀ column, initial detection
+  before replicator convergence). Final-state DR=100% / FPR=0% represents the mathematically guaranteed
+  end-state after Nash equilibrium convergence — not the live operating point.
+  <br><br>
+  © 2026 Q-TRUST Research Project · Cabuyao, Laguna, Philippines ·
+  <a href="#">ISEF 2027 — Systems Software (SFTD)</a>
+</footer>
+
+<script>
+/* ════════════════════════════════════════════════
+   ENVIRONMENT TOGGLE — Directive 3
+   In a real deployment, read from localStorage or
+   a server-side cookie to persist across refreshes.
+════════════════════════════════════════════════ */
+let APP_ENV = localStorage.getItem('qtrust_env') || 'simulation';
+
+function applyEnv() {
+  const dot  = document.getElementById('env-dot');
+  const pill = document.getElementById('env-pill');
+  const text = document.getElementById('env-badge-text');
+
+  if (APP_ENV === 'pilot') {
+    dot.className  = 'env-dot pilot';
+    pill.className = 'env-pill pilot';
+    pill.textContent = 'PILOT';
+    text.textContent = 'Live data: FastAPI /api/v1/*';
+  } else {
+    dot.className  = 'env-dot sim';
+    pill.className = 'env-pill sim';
+    pill.textContent = 'SIMULATION';
+    text.textContent = 'Data: simulation_fixed.py + summary_statistics_fixed.csv';
+  }
+  localStorage.setItem('qtrust_env', APP_ENV);
+}
+
+function toggleEnv() {
+  APP_ENV = APP_ENV === 'simulation' ? 'pilot' : 'simulation';
+  applyEnv();
+  // In a real implementation the portal cards would update their href
+  // to include ?env=pilot query param for Layer 2 to read on load
+  document.querySelectorAll('.portal-card').forEach(c => {
+    const url = new URL(c.href);
+    url.searchParams.set('env', APP_ENV);
+    c.href = url.toString();
+  });
+}
+
+/* ════════════════════════════════════════════════
+   ROUTE CARDS — pass env param on navigation
+════════════════════════════════════════════════ */
+document.querySelectorAll('.portal-card, .auditor-link').forEach(card => {
+  card.addEventListener('click', (e) => {
+    // Already an <a> href — just let browser navigate.
+    // Layer 2 reads ?env= from URLSearchParams to set APP_ENV.
+  });
+});
+
+applyEnv();
+</script>
+</body>
+</html>
