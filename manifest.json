@@ -82,7 +82,7 @@
       "name": "Engine Room",
       "short_name": "Engine",
       "description": "Quantum observation process terminal — Theorems 1+2+5 live computation",
-      "url": "./engine_room.html.html?utm_source=pwa_shortcut",
+      "url": "./engine_room.html?utm_source=pwa_shortcut",
       "icons": [{ "src": "icons/icon-96.png", "sizes": "96x96" }]
     }
   ],
