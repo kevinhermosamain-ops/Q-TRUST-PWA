@@ -10,9 +10,10 @@
 <script>
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('./sw.js')
-      .then(() => console.log('Service Worker Registered'))
+      .then(() => console.log('Service Worker Registered cleanly.'))
       .catch((err) => {
-         alert('PWA Service Worker Error: ' + err); // This pops up a warning on screen!
+         // Silenced the alert. The error is now safely logged in the DevTools console instead of interrupting the user.
+         console.error('PWA Service Worker Error:', err);
       });
   }
 </script>

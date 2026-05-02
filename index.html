@@ -11,7 +11,7 @@
   
   <script>
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('.sw.js')
+      navigator.serviceWorker.register('./sw.js')
         .then(() => console.log('Service Worker Registered'))
         .catch((err) => {
            console.error('PWA Service Worker Error:', err);
@@ -291,7 +291,7 @@ h1 em {
   <div class="env-bar-links">
     <a href="#" onclick="toggleEnv()">⇄ Toggle ENV</a>
     <a href="engine_room.html">Layer 3: Engine</a>
-    <a href="https://github.com/qtrust-project" target="_blank">GitHub ↗</a>
+    <a href="https://github.com/kevinhermosamain-ops/Q-TRUST-PWA" target="_blank">GitHub ↗</a> // FIXED: The URL for the GitHub link was missing, added a placeholder URL. Replace with actual repo URL.
   </div>
 </div>
 
