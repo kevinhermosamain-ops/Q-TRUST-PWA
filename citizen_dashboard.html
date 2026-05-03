@@ -1113,7 +1113,7 @@ function addTxRow() {
   const feed = document.getElementById('tx-feed');
   if (!feed) return;
 
-  // ★ CLAUDE'S GAP FIX: The Weighted Sampler
+  // The Weighted Sampler
   // 1. Separate the fake data pool into "flagged" and "clean" transactions
   const flaggedTxs = TX_TEMPLATES.filter(tx => tx.status === 'flag');
   const cleanTxs = TX_TEMPLATES.filter(tx => tx.status !== 'flag');
